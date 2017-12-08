@@ -1,6 +1,6 @@
 import _ from 'lodash'
 
-const MongoClient = require('mongodb')
+const MongoClient = require('mongodb').MongoClient
 
 export default class Database {
 
@@ -13,34 +13,48 @@ export default class Database {
   connect () {
     return new Promise((resolve, reject) => {
       MongoClient.connect(this.uri, (err, db) => {
-        if (err) reject(err)
+        if (err) return reject(err)
         this.db = db
-        resolve(this)
+        return resolve(this)
       })
     })
   }
 
-  listDomains () {
+  listDomains (owner = null) {
     return new Promise((resolve, reject) => {
-      this.db.collection('domains').find({}).toArray((err, result) => {
-        if (err) reject(err)
-        const domains = result.map(r => ({
-          name: r.domainName,
-          date: new Date(r.createdAt)
-        }))
-        const sorted = domains.sort((a, b) => b.date - a.date)
-        sorted.forEach(domain =>
-          console.log(`${domain.name}`)
-        )
-        const grouped = _.groupBy(sorted, (item) =>
-          grouped.date.toString().substring(0,4))
-        console.log(grouped)
-        resolve(result)
+      const query = {}
+      if (owner) query.owner = owner
+      const cursor = this.db.collection('domains').find(query).sort( { createdAt: -1 } )
+      cursor.toArray((err, result) => {
+        if (err) return reject(err)
+        const domains = result.map(r => {
+          return {
+            name: r.domainName,
+            date: new Date(r.createdAt)
+          }
+        })
+        return resolve(domains)
       })
     })
   }
 
-  exportToCSV () {
+  listUsers () {
+    return new Promise((resolve, reject) => {
+      const cursor = this.db.collection('users').find({}).sort( { createdAt: -1 } )
+      cursor.toArray((err, result) => {
+        if (err) return reject(err)
+        const users = result.map(user => {
+          return {
+            name: user.emails[0].address,
+            date: new Date(user.createdAt)
+          }
+        })
+        return resolve(users)
+      })
+    })
+  }
 
+  close () {
+    this.db.close()
   }
 }

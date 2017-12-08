@@ -18,6 +18,8 @@
   "dependencies": {
     "crypto": "0.0.3",
     "dotenv": "^4.0.0",
+    "loadash": "^1.0.0",
+    "mongodb": "^2.2.33",
     "request": "^2.81.0",
     "request-promise": "^4.2.1"
   }
