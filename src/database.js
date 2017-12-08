@@ -20,7 +20,7 @@ export default class Database {
     })
   }
 
-  listDomains (owner = null) {
+  getDomains (owner = null) {
     return new Promise((resolve, reject) => {
       const query = {}
       if (owner) query.owner = owner
@@ -38,18 +38,28 @@ export default class Database {
     })
   }
 
-  listUsers () {
+  getUsers () {
     return new Promise((resolve, reject) => {
       const cursor = this.db.collection('users').find({}).sort( { createdAt: -1 } )
       cursor.toArray((err, result) => {
         if (err) return reject(err)
+
         const users = result.map(user => {
           return {
-            name: user.emails[0].address,
-            date: new Date(user.createdAt)
+            id: user._id,
+            email: user.emails[0].address,
+            createdAt: new Date(user.createdAt)
           }
         })
-        return resolve(users)
+
+        const promises = users.map(user => {
+          return this.getDomains(user.id).then(domains => {
+            user.domains = domains
+          })
+        })
+
+        return Promise.all(promises)
+          .then(() => resolve(users))
       })
     })
   }
