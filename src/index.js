@@ -32,9 +32,11 @@ const exportUserRegisteredTwoWeekAgo = users => {
 
 // 3. Users with one domain and registered since at least 1 year.
 const exportUserRegisteredOneYearAgoWithOneDomain = users => {
+  const muxumuxu = users.find(u => u.email === 'hello@muxumuxu.com')
   const yearAgo = moment().subtract(1, 'y')
   const filteredUsers = users.filter(u => moment(u.createdAt) < yearAgo && u.domains.length > 0)
-  return exportToCSV([], 'output/year-ago-with-one-domain.csv')
+  const emails = filteredUsers.map(u => u.email)
+  return exportToCSV(emails, 'output/year-ago-with-one-domain.csv')
 }
 
 // 4. Users with more than one domain
